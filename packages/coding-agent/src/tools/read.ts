@@ -891,6 +891,10 @@ const readSchema = type({
 	path: type("string").describe("Local path, internal URI, or URL; selectors inline."),
 });
 
+const readSchemaNoUrl = type({
+	path: type("string").describe("Local path or internal URI; selectors inline."),
+});
+
 export type ReadToolInput = typeof readSchema.infer;
 
 type ReadParams = ReadToolInput;
@@ -1153,9 +1157,12 @@ export class ReadTool implements AgentTool<typeof readSchema, ReadToolDetails> {
 		return prompt.render(readDescription, {
 			IS_HL_MODE: resolveFileDisplayMode(this.session).hashLines,
 			BINARY_VIEWS: cfgIdaAvailable.get(this.session.settings),
+			fetchEnabled: cfgFetchEnabled.get(this.session.settings),
 		});
 	}
-	readonly parameters = readSchema;
+	get parameters(): typeof readSchema {
+		return cfgFetchEnabled.get(this.session.settings) ? readSchema : readSchemaNoUrl;
+	}
 	readonly strict = true;
 
 	readonly speculation = {

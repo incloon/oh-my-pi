@@ -7,6 +7,19 @@
 ### Breaking Changes
 
 - Rust SDK: `BashCommand` and `ReadyEvent` struct literals need `exclude_from_context: None` and `supports_bash_exclude_from_context: None` ([#18206](https://github.com/can1357/oh-my-pi/pull/18206) by [@andrebrait](https://github.com/andrebrait))
+### Added
+
+- `bun run install:local-package` packages this checkout and installs a detached `omp` that does not depend on the source tree.
+
+### Changed
+
+- A custom system prompt or subagent role replaces only the role and workflow text. Tool policy stays, and the prompt is Runtime, then project context, then that role text, then append text, so the harness prefix can still hit the prompt cache.
+
+### Fixed
+
+- Turning off Read URLs (`fetch.enabled`) no longer leaves the read tool prompt and parameter description telling the model to fetch web pages.
+
+## [18.18.0] - 2026-11-07
 
 ### Added
 
