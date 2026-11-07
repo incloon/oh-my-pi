@@ -315,9 +315,9 @@ After rule discovery in `createAgentSession` (`sdk.ts`), `bucketRules(...)` appl
 
 `buildSystemPromptInternal` receives both `rules` (rulebook) and `alwaysApplyRules`.
 
-Always-apply rules are deduped against the effective system/custom/append prompt sources and loaded context-file bodies. A rule whose normalized content already appears in one of those sources is omitted from automatic injection. Remaining raw bodies render before the rulebook listing: inside `<generic-rules>` in the default template and directly in the bundled custom-prompt template.
+Always-apply rules are deduped against the effective system, custom, and append sources and loaded context-file bodies. A rule whose normalized content already appears in one of those sources is omitted from automatic injection. Remaining raw bodies render in the Runtime zone, inside `<generic-rules>`, before the rulebook listing.
 
-Rulebook rules are rendered in a `<domain-rules>` block as `- <name> (<globs>): <description>` lines; the URL list in the prompt documents `rule://<name>` and the workflow section tells the model to read relevant rules first. The custom-prompt template (`custom-system-prompt.md`) instead renders `<rule name="...">` entries with `<glob>` children under an explicit "You MUST read `rule://<name>`" instruction.
+Rulebook rules are rendered in the Runtime zone as a `<domain-rules>` block of `- <name> (<globs>): <description>` lines. The URL list documents `rule://<name>`, and the default System zone tells the model to read relevant rules first. A custom System replaces that workflow text but does not drop the Runtime rule listing.
 
 This is advisory/contextual: prompt text asks the model to read applicable rules, but code does not enforce glob applicability.
 
