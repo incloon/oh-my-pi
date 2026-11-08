@@ -33,7 +33,8 @@ import {
 	unsupportedProxyMessage,
 	withTimeoutSignal,
 } from "../utils/fetch-timeout";
-import { type BuildAnswer, type BuildPatch, type Fetch, fetchBuild, type UpdateChannel } from "./build-service";
+import { type BuildAnswer, type BuildPatch, type Fetch, type UpdateChannel } from "./build-service";
+import { fetchGitHubReleaseBuild as fetchBuild } from "./github-release";
 import {
 	DEFAULT_NPM_REGISTRY,
 	loadNpmRegistryResolver,
@@ -2129,8 +2130,8 @@ export async function updateViaShimTakeover(
  */
 function installerHint(): string {
 	return process.platform === "win32"
-		? "& ([scriptblock]::Create((irm https://omp.sh/install.ps1))) -Binary"
-		: "curl -fsSL https://omp.sh/install | sh -s -- --binary";
+		? "irm https://raw.githubusercontent.com/incloon/oh-my-pi/dev/scripts/github-install.ps1 | iex"
+		: "curl -fsSL https://raw.githubusercontent.com/incloon/oh-my-pi/dev/scripts/github-install.sh | sh";
 }
 
 /** Persisted channel, or undefined when settings are unavailable (SDK/test embedding without `Settings.init()`). */
