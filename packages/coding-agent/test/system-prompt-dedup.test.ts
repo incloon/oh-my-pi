@@ -104,7 +104,7 @@ describe("SYSTEM.md prompt assembly", () => {
 		const promptText = renderedPrompt.join("\n\n");
 		const matches = promptText.match(new RegExp(escapeRegExp(systemPrompt), "g")) ?? [];
 		expect(matches).toHaveLength(1);
-		expect(promptText).toContain('<skill name="focused-work">');
+		expect(promptText).toContain("- focused-work: Focused work instructions");
 	});
 
 	it("does not resolve already-loaded prompt text as a path", async () => {
@@ -163,7 +163,7 @@ describe("SYSTEM.md prompt assembly", () => {
 
 		const promptText = systemPrompt.join("\n\n");
 		const appendMatches = promptText.match(new RegExp(escapeRegExp(appendPrompt), "g")) ?? [];
-		expect(systemPrompt).toHaveLength(2);
+		expect(systemPrompt).toHaveLength(4);
 		expect(promptText).toContain("CLI custom prompt");
 		expect(promptText).toContain("<workspace-tree>");
 		expect(promptText).toContain("<dir-context>");

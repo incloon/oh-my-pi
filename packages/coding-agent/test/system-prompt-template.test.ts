@@ -200,7 +200,7 @@ describe("system prompt Handlebars templates", () => {
 			const result = await buildSystemPrompt(options(cwd));
 			const text = result.systemPrompt.join("\n\n");
 			expect(text).toContain("fallback literal prompt");
-			expect(text).not.toContain("⁂ Tool Policy");
+			expect(text).toContain("⁂ Tool Policy");
 		});
 	});
 
@@ -223,7 +223,7 @@ describe("system prompt Handlebars templates", () => {
 			const result = await buildSystemPrompt(options(cwd));
 			const text = result.systemPrompt.join("\n\n");
 			expect(text).toContain("fallback literal prompt");
-			expect(text).not.toContain("⁂ Tool Policy");
+			expect(text).toContain("⁂ Tool Policy");
 		});
 	});
 
@@ -267,7 +267,7 @@ describe("system prompt Handlebars templates", () => {
 		expect(first.text).toContain("COMPUTER=enabled");
 		expect(first.text).toContain("<workstation>");
 		expect(first.text).toContain("COMPUTER-GUIDANCE");
-		expect(first.xdevCatalogNames).toBeUndefined();
+		expect(first.xdevCatalogNames).toEqual(["fetch"]);
 
 		expect(second.text).toContain("TOOLS=edit,search");
 		expect(second.text).toContain("DEVICES=search=searches the second source");
@@ -275,7 +275,7 @@ describe("system prompt Handlebars templates", () => {
 		expect(second.text).not.toContain("device docs v1");
 		expect(second.text).toContain("<workstation>");
 		expect(second.text).toContain("COMPUTER-GUIDANCE");
-		expect(second.xdevCatalogNames).toBeUndefined();
+		expect(second.xdevCatalogNames).toEqual(["search"]);
 	});
 
 	it("claims the xdev catalog when a template renders the xd:// section", async () => {

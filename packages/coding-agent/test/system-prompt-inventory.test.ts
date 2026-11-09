@@ -558,9 +558,10 @@ describe("system prompt tool inventory", () => {
 		});
 		expect(systemPrompt[1]).toBe("COMPUTER-GUIDANCE");
 		expect(systemPrompt.filter(block => block.includes("COMPUTER-GUIDANCE"))).toHaveLength(1);
-		// Prelude names still drive the verification bullets.
-		expect(systemPrompt[0]).toContain("Native desktop: JS/Python eval `computer` helpers");
-		expect(systemPrompt[0]).not.toContain("No runtime for changed surface");
+		// Prelude names still drive the verification bullets, now in the System zone.
+		const rendered = systemPrompt.join("\n");
+		expect(rendered).toContain("Native desktop: JS/Python eval `computer` helpers");
+		expect(rendered).not.toContain("No runtime for changed surface");
 	});
 
 	it("renders the functions namespace (not a name list) when tools are not native", async () => {

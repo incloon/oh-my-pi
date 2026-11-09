@@ -31,7 +31,7 @@ import { loadSkills, type Skill } from "./extensibility/skills";
 import { InternalUrlRouter } from "./internal-urls/router";
 import type { SchemeHost } from "./internal-urls/types";
 import activeRepoContextTemplate from "./prompts/system/active-repo-context.md" with { type: "text" };
-import customSystemPromptTemplate from "./prompts/system/custom-system-prompt.md" with { type: "text" };
+import defaultSystemPromptTemplate from "./prompts/system/default-system.md" with { type: "text" };
 import defaultPersonality from "./prompts/system/personalities/default.md" with { type: "text" };
 import friendlyPersonality from "./prompts/system/personalities/friendly.md" with { type: "text" };
 import pragmaticPersonality from "./prompts/system/personalities/pragmatic.md" with { type: "text" };
@@ -1046,46 +1046,46 @@ export async function buildSystemPrompt(options: BuildSystemPromptOptions = {}):
 		writeTransportOnly,
 		subagent,
 	};
-	const selectedTemplate = resolvedCustomPrompt
-		? customSystemPromptTemplate
-		: (resolvedSystemPromptTemplate ?? systemPromptTemplate);
-	let rendered: string;
-	try {
-		rendered = prompt.render(selectedTemplate, data);
-	} catch (error) {
-		if (resolvedSystemPromptTemplate === undefined) throw error;
-		if (!hasDiscoveredTemplate) {
-			throw new Error(`Invalid system prompt template: ${String(error)}`, { cause: error });
-		}
-		logger.warn("Ignoring invalid discovered system prompt template; using the bundled prompt", {
-			error: String(error),
-		});
-		resolvedSystemPromptTemplate = undefined;
-		rendered = prompt.render(systemPromptTemplate, data);
-	}
-	const systemPrompt = [rendered];
+	// Runtime stays the bundled harness template. It must not start with
+	// `<project-context>` or `<memories>`: the Anthropic head breakpoint anchors
+	// on the block before the first such marker. System and Append follow Project.
+	const runtime = prompt.render(systemPromptTemplate, data);
+	const systemPrompt = [runtime];
 	for (const prelude of evalPreludes) {
 		const guidance = prelude.guidance?.trim();
 		if (guidance) systemPrompt.push(guidance);
 	}
-	// Working-directory content (context files with their paths, workspace
-	// tree/roots, active repo) and session append text form one trailing
-	// `<project-context>` block after every static block, so sessions in
-	// different directories share the static prefix and the Anthropic head
-	// cache breakpoint lands right before this block.
 	const projectPrompt = prompt
 		.render(projectPromptTemplate, { ...data, activeRepoContext: activeRepoContextPrompt })
 		.trim();
-	if (projectPrompt) {
-		systemPrompt.push(projectPrompt);
-	}
+	if (projectPrompt) systemPrompt.push(projectPrompt);
 
-	// Claim delivery only when the rendered block 0 actually carries the xd://
-	// section, so a template that references {{xdevDocs}} keeps mount-notice
-	// dedupe while one that omits it stays honest.
+	let systemBlock = "";
+	if (resolvedSystemPromptTemplate !== undefined) {
+		try {
+			systemBlock = prompt.render(resolvedSystemPromptTemplate, data).trim();
+		} catch (error) {
+			if (!hasDiscoveredTemplate) {
+				throw new Error(`Invalid system prompt template: ${String(error)}`, { cause: error });
+			}
+			logger.warn("Ignoring invalid discovered system prompt template; using the bundled system zone", {
+				error: String(error),
+			});
+			resolvedSystemPromptTemplate = undefined;
+			systemBlock = prompt.render(defaultSystemPromptTemplate, data).trim();
+		}
+	} else if (resolvedCustomPrompt?.trim()) {
+		// Literal custom text replaces the System zone only. Do not render it.
+		systemBlock = resolvedCustomPrompt.trim();
+	} else {
+		systemBlock = prompt.render(defaultSystemPromptTemplate, data).trim();
+	}
+	if (systemBlock) systemPrompt.push(systemBlock);
+
+	const appendBlock = resolvedAppendPrompt?.trim() ?? "";
+	if (appendBlock) systemPrompt.push(appendBlock);
+
 	const xdevCatalogNames =
-		!resolvedCustomPrompt && xdevTools.length > 0 && rendered.includes("xd://")
-			? xdevTools.map(mounted => mounted.name)
-			: undefined;
+		xdevTools.length > 0 && runtime.includes("xd://") ? xdevTools.map(mounted => mounted.name) : undefined;
 	return { systemPrompt, xdevCatalogNames };
 }

@@ -4172,7 +4172,12 @@ function buildSubagentSessionOptions(
 			// `<project-context>` block so spawns of the same agent share the static
 			// prompt prefix as a cache hit.
 			const seancePrompt = spec.preparedSession?.promptSuffix(inputs.model);
-			return [...defaultPrompt, subagentPrompt, ...(seancePrompt ? [seancePrompt] : [])];
+			const projectAt = defaultPrompt.findIndex(block => block.startsWith("<project-context>"));
+			const withSystem =
+				projectAt === -1
+					? [...defaultPrompt, subagentPrompt]
+					: [...defaultPrompt.slice(0, projectAt + 1), subagentPrompt, ...defaultPrompt.slice(projectAt + 2)];
+			return [...withSystem, ...(seancePrompt ? [seancePrompt] : [])];
 		},
 	};
 }
