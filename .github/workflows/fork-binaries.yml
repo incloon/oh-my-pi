@@ -1,0 +1,77 @@
+name: Fork binaries
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version without the leading v. Must match the compiled package version or be newer."
+        required: true
+        default: "18.18.1"
+        type: string
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: "Build ${{ matrix.asset }}"
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-2025
+            asset: omp-windows-x64.exe
+          - os: ubuntu-22.04
+            asset: omp-linux-x64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.4.4
+      - name: Install workspace
+        run: bun install --frozen-lockfile
+      - name: Compile host binary
+        run: bun packages/coding-agent/scripts/build-fork-binary.ts
+      - name: Smoke test
+        shell: bash
+        run: |
+          bin="packages/coding-agent/binaries/${{ matrix.asset }}"
+          "$bin" --version
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ matrix.asset }}
+          if-no-files-found: error
+          path: |
+            packages/coding-agent/binaries/${{ matrix.asset }}
+            packages/coding-agent/binaries/${{ matrix.asset }}.sha256
+
+  release:
+    name: Publish GitHub Release
+    needs: build
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.version || github.ref_name }}
+        run: |
+          set -eu
+          tag="${VERSION#v}"
+          tag="v${tag}"
+          git tag -f "$tag" "${GITHUB_SHA}"
+          git push -f origin "refs/tags/${tag}"
+          gh release delete "$tag" --yes --cleanup-tag || true
+          git tag -f "$tag" "${GITHUB_SHA}"
+          git push -f origin "refs/tags/${tag}"
+          gh release create "$tag" --target "${GITHUB_SHA}" --title "$tag" --notes "Windows and Linux binaries. Install with the raw scripts in this tag." dist/*

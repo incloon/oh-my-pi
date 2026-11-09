@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Added
+
+- Windows and Linux standalone binaries install from this fork's GitHub Releases (`scripts/github-install.ps1`, `scripts/github-install.sh`). `omp update` on those binaries downloads the whole new file from the same release.
+
+### Changed
+
+- A custom system prompt or subagent role replaces only the role and workflow text. Tool policy stays, and the prompt is Runtime, then project context, then that role text, then append text.
+
+### Fixed
+
+- Turning off Read URLs (`fetch.enabled`) no longer leaves the read tool prompt and parameter description telling the model to fetch web pages.
+
 ## [18.18.3] - 2026-11-09
 
 ### Breaking Changes

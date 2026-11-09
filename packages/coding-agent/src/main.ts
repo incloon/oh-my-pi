@@ -41,7 +41,7 @@ import { processFileArguments } from "./cli/file-processor";
 import { buildInitialMessage } from "./cli/initial-message";
 import { formatKeyHint, KeybindingsManager } from "@oh-my-pi/pi-tui/app-keybindings";
 import type { SessionPickerOptions } from "@oh-my-pi/pi-tui/apps/session-picker";
-import { fetchBuild } from "./cli/build-service";
+import { fetchGitHubReleaseBuild as fetchBuild } from "./cli/github-release";
 import { applyStartupCwd } from "./cli/startup-cwd";
 import { runAutoUpdate } from "./cli/auto-update";
 import { getLatestRelease, isSourceCheckout, managedInstallName } from "./cli/update-cli";
